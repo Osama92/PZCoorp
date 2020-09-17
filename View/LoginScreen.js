@@ -5,11 +5,17 @@ import * as Font from 'expo-font'
 import Spinner from 'react-native-loading-spinner-overlay'
 import {AppLoading} from 'expo'
 import {firebase} from '../firebase/config'
+import exampleImage from '../assets/pzc.png'
 
 let customFonts = {
     'InterBlack': require('../Fonts/InterBlack.ttf'),
     'InterMedium': require('../Fonts/InterMedium.ttf')
 }
+// var im = "\"'../assets/pzc.png'\""
+// var jKey = im.slice(1, -1)
+// console.log(jKey)
+
+// const exampleUri = Image.resolveAssetSource(jKey).uri
 
 class LoginScreen extends Component {
   constructor(props) {
@@ -112,7 +118,16 @@ class LoginScreen extends Component {
       this._loadFontsAsync()
   }
 
+  
+
   render() {
+    
+    //var image = ''
+    //var image = '../assets/pzc.png'
+    // var key = ''
+    // key = "{\"require('../assets/pzc.png')\"}"
+    // var jKey = key.slice(2, -2)
+    //console.log(jKey)
       if (this.state.fontLoaded) {
         return (
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : null}

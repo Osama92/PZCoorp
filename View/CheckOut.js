@@ -30,62 +30,69 @@ class CheckOut extends Component {
       Address:'',
       Phone:'',
       fontLoaded: false,
+      myCreditLimit: 0
     };
   }
 
-  confirmOrder = () => {
-      
-        Alert.alert(
-          'ORDER CONFIRMED',
-          'Dear customer, Thank you for shopping with us. A confirmation text containing your order number'+' '+ this.state.trackingNo + ' ' + 'will be sent to you shortly.',
-          [{
-            text: 'ok',
-            onPress: ()=>{this.props.clear(this.props.cartItems); this.props.navigation.navigate('Home'); this.firebaseWrite()
-        }
-          }],
-          {cancelable: false}
-        )
-      
-  }
+
 
   readData = ()=> {
-    firebase.database().ref('user/details').once('value').then((snapShot)=> {
-      var Address = snapShot.child('Address').val()
-      this.setState({Address:Address})
-      var Phone = snapShot.child('Phone').val()
-      this.setState({Phone:Phone})
+    firebase.database().ref().child("Users/details").orderByChild("ClockNumber").equalTo(firebase.auth().currentUser.email).on('value', snapshot => {
+      if (snapshot.exists()) {
+        var usersDetail = snapshot.val()
+        var keys = Object.keys(usersDetail)
+        var myKeys = Object.keys(usersDetail).toString()
+        for (var i = 0; i < keys.length; i++) {
+        var k = keys[i]
+        var displayName = usersDetail[k].DisplayName
+        var creditLimit = usersDetail[k].CreditLimit
+        }
+        this.setState({myCreditLimit:creditLimit})
+        //console.log(this.state.myCreditLimit)
+        
+      }
     })
   }
 
+  
+
   firebaseWrite = ()=> {
        //FIREBASE WRITE:
-       firebase.database().ref().child("Users/details").orderByChild("ClockNumber").equalTo(firebase.auth().currentUser.email).on('value', snapshot => {
+       firebase.database().ref().child("Users/details").orderByChild("ClockNumber").equalTo(firebase.auth().currentUser.email).once('value', snapshot => {
         if (snapshot.exists()) {
           var usersDetail = snapshot.val()
           var keys = Object.keys(usersDetail)
+          var myKeys = Object.keys(usersDetail).toString()
           for (var i = 0; i < keys.length; i++) {
           var k = keys[i]
           var displayName = usersDetail[k].DisplayName
           var creditLimit = usersDetail[k].CreditLimit
           }
-          firebase.database().ref('Transactions/' + displayName + '/' + this.state.trackingNo).set({
-            OrderDate: moment().format('DD/MM/YYYY, h:mm:ss a'),
-            Item: this.state.item ,
-            Total: this.state.total
-        }).then(
-            ()=> {
-                var balance = creditLimit - this.state.total
-                console.log(balance)
-                
-            }
-        ).catch((error)=>{
-            console.log(error)
-        })
-        }
+         
+            firebase.database().ref('Transactions/' + displayName + '/' + this.state.trackingNo).push({
+              OrderDate: moment().format('DD/MM/YYYY, h:mm:ss a'),
+              Item: this.state.item ,
+              Total: this.state.total
+          }).then(
+              ()=> {
+                  
+                  firebase.database().ref('Users/details/').child(myKeys).child('CreditLimit').set(firebase.database.ServerValue.increment(-this.state.total)).then(()=>{this.setState({total: 0})})
+                  
+                  
+              }
+          ).catch((error)=>{
+              console.log(error)
+          })
+          
+            
+          
+         
+        } 
        })
    
   }
 
+  
   makeTrackingNumber = (lenght) => {
       var result = ''
       var character = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -96,6 +103,22 @@ class CheckOut extends Component {
       return result
   }
 
+  confirmOrder = () => {
+      
+      Alert.alert(
+        'ORDER CONFIRMED',
+        'Dear customer, Thank you for shopping with us. A confirmation text containing your order number'+' '+ this.state.trackingNo + ' ' + 'will be sent to you shortly.',
+        [{
+          text: 'Ok',
+          onPress: ()=>{this.props.clear(this.props.cartItems); this.props.navigation.navigate('Home');
+      }
+        }],
+        {cancelable: false}
+      )
+    
+    
+}
+
   // Fonts Loaded Async
 async _loadFontsAsync() {
     await Font.loadAsync(customFonts)
@@ -104,16 +127,8 @@ async _loadFontsAsync() {
 
 
   componentDidMount() {
-    var user = firebase.auth().currentUser
-    var name
- 
-    if (user != null) {
-      name = user.displayName
-      this.setState({name:name})
-     
-      
-    }
-    this.readData()
+   
+    //this.readData()
     this._loadFontsAsync()
 
    }
@@ -126,7 +141,7 @@ async _loadFontsAsync() {
     return (
       <View style={styles.container}>
        <View style={styles.headerView}>
-         <TouchableOpacity style={styles.backView} onPress={()=>this.props.navigation.navigate('Cart')}>
+         <TouchableOpacity style={styles.backView} onPress={()=>this.props.navigation.navigate('CartScreen')}>
            <Image source={require('../assets/smallback.png')} style={{width: 30, height:'100%', tintColor:'#fff'}}/>
            <Text style={{fontSize: 16, color: '#fff', fontWeight:'600', fontFamily:'Black'}}>Back to cart</Text>
          </TouchableOpacity>
@@ -173,7 +188,7 @@ async _loadFontsAsync() {
           <Text style={{paddingLeft:40,fontFamily: 'Black', fontSize: 18, color:'#6D2775'}}> Total---------------- ₦{this.props.total}.00</Text>
         </View>
 
-        <TouchableOpacity onPress={()=>this.confirmOrder()}
+        <TouchableOpacity onPress={()=>{this.firebaseWrite(); this.confirmOrder()}}
                             style={{width:screenWidth/1.3, height: 60, backgroundColor: '#6D2775', alignItems:'center', justifyContent:'center', borderRadius:4, marginTop: 10}}>
             <Text style={styles.footerText}>Place Order</Text>
             

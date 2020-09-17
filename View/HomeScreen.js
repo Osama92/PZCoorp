@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Image, TouchableOpacity, TextInput,FlatList, Alert, SectionList, Dimensions} from 'react-native';
+import { View, Text, StatusBar, SafeAreaView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Image, TouchableOpacity,FlatList, Alert, SectionList, Dimensions} from 'react-native';
 import Spinner from 'react-native-loading-spinner-overlay'
 import * as Font from 'expo-font'
 import {AppLoading} from 'expo'
@@ -24,8 +24,6 @@ const width = Dimensions.get('screen').width
 
 
 
-
-
 class HomeScreen extends Component {
   constructor(props) {
     super(props);
@@ -37,13 +35,43 @@ class HomeScreen extends Component {
       creditLimit: '',
       displayName: '',
       products: [],
+      productss: '',
       inMemoryProducts:[],
+      balance: 0
     };
   }
 
+  readProduct =()=> {
+  this.setState({isLoading: true})
+   firebase.database().ref().child('Products/').on('value', snapshot => {
+    var productData = []
+      snapshot.forEach((childSnapShot)=>{
+        productData.push(childSnapShot.val())
+      })
+
+       var char = productData.map(function (item) {
+        return {id: item.id,
+                name: item.name,
+                price: item.price,
+                qty: item.qty,
+                AvailableQty: item.AvailableQty
+              }
+      })
+      this.setState({productss:char})
+      this.setState({isLoading: false})
+      // setTimeout(() => {
+        console.log(this.state.productss, 'Na me noni')
+        
+      // }, 2000);
+  })
+
+   
+  }
+
+
 
   loadProducts = ()=> {
-    this.setState({products: products, inMemoryProducts:products, isLoading: false })
+    this.setState({products:products, inMemoryProducts:products, isLoading: false })
   }
 
   searchProducts = (value)=> {
@@ -58,8 +86,6 @@ class HomeScreen extends Component {
     )
     this.setState({products: filteredProducts})
 }
- 
-
   
 
 // set SpinnerTimeout
@@ -70,7 +96,7 @@ spinnerTimeOut = ()=> {
     'Dear Member, Kindly ensure that you are connected to the internet.',
     [{
       text: 'Ok',
-      onPress: ()=>this.setState({isLoading: false})
+      onPress: ()=>{this.setState({isLoading: false}); this.props.navigation.navigate('LoginScreen')}
       
     }],
     {cancelable: true}
@@ -85,79 +111,77 @@ async _loadFontsAsync() {
 }
 
 
-//Read data From Firebase
-// readFromFirebase = () => {
-//   //database = firebase.database()
-//   var ref = firebase.database().ref('Users/details/')
-//   ref.on('value', this.gotData, this.errData)
-// }
-
-// gotData = (data) => {
-    
-//     var users = data.val()
-//     var keys = Object.keys(users)
-//     for(var i = 0; i < keys.length; i++) {
-//       var k = keys[i]
-//       var clockNumber = users[k].ClockNumber
-//       var credit = users[k].Credit
-//       this.setState({creditLimit:credit})
-
-//       console.log(clockNumber, credit)
-//     }
-    
-// }
-
+// Read Data from Firebase method:
 readFromFirebase = ()=> {
-  // firebase.database().ref('Users/details').equalTo(this.state.clockNumber).once('value').then((snapShot)=>{
-  //   var clockNumber = snapShot.child('ClockNumber').val()
-  //   var displayName = snapShot.child('DisplayName').val()
-  //   var creditLevel = snapShot.child('Credit').val()
-  //   this.setState({clockNumber: clockNumber})
-  //   this.setState({displayName: displayName})
-  //   this.setState({creditLimit: creditLevel})
-  // })
-
-  firebase.database().ref().child("Users/details").orderByChild("ClockNumber").equalTo(firebase.auth().currentUser.email).on("value", snapshot=> {
+  //New1
+  this.setState({isLoading: true})
+  firebase.database().ref().child("Users/details").orderByChild("ClockNumber").equalTo(firebase.auth().currentUser.email).on('value', snapshot=> {
     if (snapshot.exists()) {
-      console.log('Yes')
+      //new2
+      this.setState({isLoading: false})
       var usersDetail = snapshot.val()
       var keys = Object.keys(usersDetail)
       for (var i = 0; i < keys.length; i++) {
         var k = keys[i]
         var displayName = usersDetail[k].DisplayName
         var creditLimit = usersDetail[k].CreditLimit
+        
+      }
         this.setState({displayName:displayName})
         this.setState({creditLimit: creditLimit})
-      }
+      
     
     
     } else {
       this.setState({isLoading: true})
     setTimeout(() => {
       this.spinnerTimeOut()
-    }, 3000);
+    }, 9000);
     }
-  })
+    })
     }
 
-    renderItem = ({item})=> (
-        
+    checkProductAvailability = (item, itemAvail) => {
+      if (itemAvail <= 0) {
+        alert('Out of Stock')
+      } else {
+        this.props.addItemToCart(item)
+      }
+    }
+
+
+
+    renderItem = ({item})=> {
+
+      
+      
+      var hh = null 
+      if (item.id === 1) {
+        hh = require('../assets/images/maggi1.jpeg')
+      } else if (item.id === 2) {
+        hh = require('../assets/images/Kings2.png')
+      }else if (item.id === 3) {
+        hh = require('../assets/images/Kings1.png')
+      }else if (item.id == 4) {
+        hh = require('../assets/images/cube.png')
+      }
+
+      return (
       <View style={{minHeight: 100,margin:9, width:width/3.5, alignItems:'center', backgroundColor: '#fff', borderRadius: 7, padding:5}}>
-          <TouchableOpacity onPress={()=>this.props.addItemToCart(item)}>
-          <Image source={item.image}
+          <TouchableOpacity onPress={()=>this.checkProductAvailability(item, item.AvailableQty)}>
+          <Image source={hh}
                  style={{width: 90, height: 90, resizeMode: 'cover', justifyContent:'center'}}/>
-                 <Text style={{width:'100%', fontWeight:'700',textAlign:'left', color:'black', width:60}}>{item.name}</Text>
+                 <Text style={{width:'100%', fontWeight:'700',textAlign:'left', color:'black', width:60, fontSize: 11}}>{item.name}</Text>
                  <Text style={{width:'100%', fontWeight:'700',textAlign:'left',color:'#6D2775', fontSize:11}}>₦{item.price}.00</Text>
                  
           </TouchableOpacity>
 
       </View>
-  )
+  )}
 
   _renderList = ({section, index}) => {
     if (index !==0) return null
     return (
-        
         <FlatList numColumns={3}
         data={section.data}
         renderItem={this.renderItem}
@@ -170,7 +194,7 @@ isEmptyRender(sections) {
      if (sections.data.length == 0) {
          return(
              <View style={{flex:1, alignItems:'center',justifyContent:'center', height: 60}}>
-             <Text style={{color: 'grey', fontWeight:'500', fontSize: 17}}>Unfortunately no match was found</Text>
+             <Text style={{color: 'grey', fontWeight:'500', fontSize: 18}}>Unfortunately no match was found</Text>
              </View>
          )
      } 
@@ -178,10 +202,15 @@ isEmptyRender(sections) {
 }
 
 
+
 componentDidMount() {
   this._loadFontsAsync()
   this.readFromFirebase()
+  this.readProduct()
+   
 }
+
+
 
 
 
@@ -189,11 +218,12 @@ componentDidMount() {
 
   render() {
     const section = [
-      {title:'Food Cupboard', data: products},
-      {title:'Showcase', data: products}
+      {title:'Food Cupboard', data: this.state.productss},
+      {title:'Showcase', data: this.state.productss}
            ]
-
+            
     if (this.state.fontLoaded) {
+      
     return (
 
          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : null}
@@ -214,7 +244,7 @@ componentDidMount() {
           <Text style={{fontFamily:'Black', fontSize:40,marginLeft: 20}}>Hello</Text>
           <Text style={{fontFamily:'Medium', fontSize:40}}> there!</Text>
           <TouchableOpacity style={{width: 50, height: 50, borderRadius: 25, backgroundColor:'#F2F2F2', marginLeft: 120, justifyContent:'center', alignItems:'center'}}
-                            onPress={()=>this.props.navigation.navigate('CartScreen')}>
+                            onPress={()=>this.props.navigation.navigate('CartScreen', {Limit: this.state.creditLimit})}>
           <Cart count={this.props.cartItems.length}/>
           </TouchableOpacity>
           </View>
@@ -222,13 +252,14 @@ componentDidMount() {
                             onPress={()=>this.props.navigation.navigate('Profile')}>
            <Image style={{width: 30, height: 30, resizeMode: 'contain', marginLeft:20, tintColor:'#6D2775'}}
                   source={require('../assets/customer.png')}/>
-           <Text style={{fontFamily:'Medium', fontSize:25,marginLeft: 10}}>{this.state.displayName}</Text>
+           <Text style={{fontFamily:'Medium', fontSize:22,marginLeft: 10}}>{this.state.displayName}</Text>
           </TouchableOpacity>
           <View style={{flexDirection: 'row', marginLeft: 20}}>
-            <Text style={{fontFamily:'Medium', fontSize: 16, color:'#6D2775'}}>Available Monthly credit limit:</Text>
-            <Text style={{fontFamily:'Black', fontSize: 16, color:'#6D2775'}}> N{this.state.creditLimit}.00</Text>
+            <Text style={{fontFamily:'Medium', fontSize: 16, color:'silver'}}>Available Monthly credit limit:</Text>
+            <Text style={{fontFamily:'Black', fontSize: 16, color:'silver'}}> N{this.state.creditLimit}.00</Text>
             
           </View>
+         
           
         </View>
         
@@ -236,7 +267,7 @@ componentDidMount() {
                              onItemSelect={(item)=>{this.props.addItemToCart(item); Keyboard.dismiss()}}
                              itemStyle={{padding: 10, marginTop: 2, backgroundColor:'#f1f1f1'}}
                              itemsContainerStyle={{maxHeight: 200,}}
-                             //items = {products}
+                             items = {this.state.productss}
                              itemTextStyle={{fontFamily: 'Medium', fontSize: 13}}
                              defaultIndex={0}
                              placeholder='What are you looking for?'
@@ -247,19 +278,14 @@ componentDidMount() {
                                           {
                                             ListEmptyComponent: ()=>(
                                                         
-                                              <View style={{justifyContent: 'center', alignItems: 'center', height:300}}>
-                                                  <Text style={{fontSize:15}}>Unfortunately, we could not find your item.</Text>
+                                              <View style={{justifyContent: 'center', alignItems: 'center', height:200, fontFamily:'Medium'}}>
+                                                  <Text style={{fontSize:20, color:'#6D2775'}}>Unfortunately, we could not find your item.</Text>
                                               </View>
                                                     )
                                         
 
-                                                },
-                                                {
-                                                  renderItem: (item)=>{this.renderItem(item)}
-                                                },
-                                                {
-                                                  data: ()=>{products}
                                                 }
+                                                
                                                 
                                               
                                                 
@@ -271,16 +297,14 @@ componentDidMount() {
                 renderItem={this._renderList}
                 sections={section}
                 renderSectionHeader={({section})=>(
-                        <View style={{flexDirection: 'row', width:'100%', justifyContent:'space-around', alignItems:'center', backgroundColor:'#6D2775', height:40, marginTop:10}}>
+                        <View style={{ width:'100%', justifyContent:'space-around', alignItems:'flex-start', backgroundColor:'#6D2775', height:40, marginTop:10}}>
                            <Text style={HomeStyle.sectionText}>{section.title}</Text>
-                             <TouchableOpacity style={{width:'50%', alignItems:'flex-end'}}
-                                               onPress={()=>this.props.navigation.navigate('Sections', { clicked: section})}>
-                                <Text style={HomeStyle.sectionText}>View all</Text>
-                                    </TouchableOpacity>
+                            
                         </View>
                           )}
                 showsVerticalScrollIndicator={false}
                 />
+                
 
         </View>
         

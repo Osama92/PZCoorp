@@ -11,7 +11,6 @@ class Total extends Component {
     renderProducts = (products) => {
         return products.map((item, index) => {
             const price = item
-            //this.state.Total += price
             const total = products.reduce((prev, next)=> prev + next.price,0)
             this.state.Total = total
             console.log(total)

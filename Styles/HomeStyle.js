@@ -45,7 +45,8 @@ export default StyleSheet.create({
     sectionText: {
         fontFamily: 'Black',
         color:'#fff',
-        fontSize:15
+        fontSize:15,
+        marginLeft: 10
     },
     profile: {
         width: '50%',
