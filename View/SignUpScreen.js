@@ -11,6 +11,13 @@ let customFonts = {
     'InterMedium': require('../Fonts/InterMedium.ttf')
 }
 
+const v = [{
+  id: 'P1510006',
+  userName: 'Usama'
+}, {
+  id: 'P1610007',
+  userName: 'Atobiloye'
+}]
 class LoginScreen extends Component {
   constructor(props) {
     super(props);
@@ -20,7 +27,9 @@ class LoginScreen extends Component {
         password: '',
         isLoading: false,
         confirmPassword: '',
-        displayName:''
+        displayName:'',
+        userNames: '',
+        v: 'Your Display Name'
     };
   }
 
@@ -49,7 +58,46 @@ class LoginScreen extends Component {
 
   //Handle DisplayName
   handleDisplayName = (text) => {
-    this.setState({displayName:text})
+    this.setState({displayName:"Hello"})
+  }
+
+  // Read Data
+
+  handleReadUsers = () => {
+    this.setState({isLoading: true})
+    firebase.database().ref().child('PZCS').once('value').then((snapShot)=> {
+      var userLists = []
+      
+      snapShot.forEach((childSnapShot)=> {
+        userLists.push(childSnapShot.val())
+      })
+      var user2 = userLists.map(function (user) {
+        return {id: user.ID,
+                name: user.Name
+              }
+      })
+      
+       
+      
+      this.setState({userNames: user2})
+      
+
+
+    }).then (()=> {
+      
+      this.setState({isLoading: false})
+      console.log(this.state.userNames)
+      
+      
+    })
+  }
+
+  ccheck = () => {
+      return this.state.userNames.some(function (el) {
+        return el.id === id, console.log(el.name)
+        console.log('ddd')
+      })
+    
   }
 
   //handleSignUp
@@ -61,7 +109,7 @@ class LoginScreen extends Component {
               .then(()=>{
                  firebase.database().ref('Users/details').push({
                     ClockNumber: this.state.clockNumber + '@pzcoorp.com',
-                    DisplayName: this.state.displayName,
+                    DisplayName: this.state.v,
                     Password: this.state.password,
 
                 
@@ -112,10 +160,32 @@ class LoginScreen extends Component {
     
   }
 
+  searchUser =(value)=> {
+    const filteredUsers = this.state.userNames.filter(
+      user => {
+        let userLowerCase = (user.id)
+        let inputUser = value.toUpperCase()
+        return userLowerCase.indexOf(inputUser) > -1 
+        
+      }
+    
+    )
+    if (value.length == 0) {
+      this.setState({v: 'Your Display Name'})
+    } else if (filteredUsers[0] == null){
+      alert('Hello, That Clock Number is not valid.')
+    } else {
+      this.setState({v: filteredUsers[0].name})
+      this.setState({clockNumber:filteredUsers[0].id.toLowerCase()})
+    }
+    
+  }
+
   
 
   componentDidMount(){
       this._loadFontsAsync()
+      this.handleReadUsers()
   }
 
   render() {
@@ -142,12 +212,13 @@ class LoginScreen extends Component {
                     <TextInput style={LoginStyle.textInput}
                                placeholder = 'Enter Clock Number'
                                placeholderTextColor = '#6D2775'
-                               onChangeText={this.handleClockNumber}
+                               onChangeText = {(value)=>this.searchUser(value)}
                                />
                     <TextInput style={LoginStyle.textInput}
-                               placeholder = 'Choose a display Name'
+                               placeholder = {this.state.v}
                                placeholderTextColor = '#6D2775'
                                onChangeText={this.handleDisplayName}
+                               editable = {false}
                                />
                     <TextInput style={LoginStyle.textInput}
                                placeholder = 'Choose Password'
