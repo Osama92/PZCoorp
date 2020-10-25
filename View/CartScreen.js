@@ -17,8 +17,6 @@ let customFonts = {
 
 const screenWidth = Dimensions.get('window').width
 
-var id = 0
-var itemId = 0
 
 
 class CartScreen extends Component {
@@ -37,8 +35,8 @@ class CartScreen extends Component {
     var item = this.props.cartItems
     var keys = Object(item).values
     //id = keys
-    console.log(this.props.itemID)
-    
+   // console.log(this.props.itemID)
+    //console.log(this.props.itemQty)
   }
 
   readProduct =()=> {
@@ -46,18 +44,14 @@ class CartScreen extends Component {
        
       var productData = []
         snapshot.forEach((childSnapShot)=>{
-          productData.push(childSnapShot.val())
+          productData.push(childSnapShot)
           
         })
         //console.log(this.props.cartItems[1])
         
-          this.setState({AvailableQty: productData[0]})
-          
-        
-        
-        
+          //this.setState({AvailableQty: productData[0]}) 
     })
-
+      
     }
 
 
@@ -71,9 +65,9 @@ class CartScreen extends Component {
 
   proceedToCart = ()=> (
     <TouchableOpacity
-                            style={{width:screenWidth/1.3, height: 40, backgroundColor: '#6D2775', alignItems:'center', justifyContent:'center', borderRadius:4, marginBottom: 10}}>
-            {this.props.cartItems.length > 0 && this.state.creditLimit >= this.props.total ? (<TouchableWithoutFeedback onPress={()=>this.props.navigation.navigate('CheckOut')}
-                  ><Text style={styles.footerText}>Proceed to checkout</Text></TouchableWithoutFeedback>) : (<TouchableWithoutFeedback onPress={()=>this.props.navigation.navigate('Home')}><Text style={styles.footerText}>Insufficient Funds</Text></TouchableWithoutFeedback>) }
+                            style={{width:screenWidth/1.3, height: 40, alignItems:'center', justifyContent:'center', borderRadius:4, marginBottom: 10, backgroundColor:'#6D2775'}}>
+            {this.props.cartItems.length > 0 && this.state.creditLimit >= this.props.total && this.props.itemQty !== 0 ? (<TouchableWithoutFeedback onPress={()=>this.props.navigation.navigate('CheckOut')}
+                  ><Text style={styles.footerText}>Proceed to checkout</Text></TouchableWithoutFeedback>) : (<TouchableOpacity style= {{backgroundColor:'grey',width:'100%', height: '100%', justifyContent:'center', borderRadius: 4, alignItems:'center'}} onPress={()=>this.props.navigation.navigate('Home')}><Text style={styles.footerText}>Insufficient Funds</Text></TouchableOpacity>) }
             
           </TouchableOpacity>
   )
@@ -160,7 +154,9 @@ const mapStateToProps = (state) => {
     return {
       cartItems: state,
       total: state.reduce((prev, next)=> prev + next.price * next.qty,0),
-      itemID: state.reduce((prev,item)=> item.id, 0)
+      itemID: state.reduce((prev,item)=> item.id, 0),
+      itemQty: state.reduce((prev, item)=> item.qty, 0)
+
     }
   }
  

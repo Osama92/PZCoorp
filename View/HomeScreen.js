@@ -59,10 +59,7 @@ class HomeScreen extends Component {
       })
       this.setState({productss:char})
       this.setState({isLoading: false})
-      // setTimeout(() => {
-        console.log(this.state.productss, 'Na me noni')
-        
-      // }, 2000);
+      
   })
 
    
@@ -173,6 +170,7 @@ readFromFirebase = ()=> {
                  style={{width: 90, height: 90, resizeMode: 'cover', justifyContent:'center'}}/>
                  <Text style={{width:'100%', fontWeight:'700',textAlign:'left', color:'black', width:60, fontSize: 11}}>{item.name}</Text>
                  <Text style={{width:'100%', fontWeight:'700',textAlign:'left',color:'#6D2775', fontSize:11}}>₦{item.price}.00</Text>
+                <Text style={{width:'100%', fontWeight:'700',textAlign:'left',color:'grey', fontSize:11}}>Available Qty: {item.AvailableQty}</Text>
                  
           </TouchableOpacity>
 
@@ -252,7 +250,7 @@ componentDidMount() {
                             onPress={()=>this.props.navigation.navigate('Profile')}>
            <Image style={{width: 30, height: 30, resizeMode: 'contain', marginLeft:20, tintColor:'#6D2775'}}
                   source={require('../assets/customer.png')}/>
-           <Text style={{fontFamily:'Medium', fontSize:22,marginLeft: 10}}>{this.state.displayName}</Text>
+           <Text style={{fontFamily:'Medium', fontSize:18,marginLeft: 10}}>{this.state.displayName}</Text>
           </TouchableOpacity>
           <View style={{flexDirection: 'row', marginLeft: 20}}>
             <Text style={{fontFamily:'Medium', fontSize: 16, color:'silver'}}>Available Monthly credit limit:</Text>
